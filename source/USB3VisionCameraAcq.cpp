@@ -141,9 +141,9 @@ int CUSB3VisionCamera::aquireImage(J_tIMAGE_INFO* imageInfo, uint8_t *buffer)
 				// If the image is already in 8-bit or 16-bit mono,
 				// J_Image_MallocEx will fail. In this case, we already have
 				// the desired image.
-				if (BufferInfo.iPixelType == J_GVSP_PIX_MONO8 ||
-						BufferInfo.iPixelType == J_GVSP_PIX_MONO16)
-				{
+				if (true){//(BufferInfo.iPixelType == J_GVSP_PIX_MONO8 ||
+					//	BufferInfo.iPixelType == J_GVSP_PIX_MONO16)
+				
 					LogMessage( "aquireImage: copying Y image", true );
 					memcpy( buffer, BufferInfo.pImageBuffer, min( img_buffer_size, BufferInfo.iImageSize ) );
 				}

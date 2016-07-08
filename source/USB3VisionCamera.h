@@ -23,7 +23,7 @@
 
 #include "JAISDK.h"
 
-#include "USB3VisionNodes.h"
+#include "USB3VisionCameraNodes.h"
 
 //////////////////////////////////////////////////////////////////////////////
 // Error codes
@@ -54,8 +54,10 @@ const char* const g_Keyword_Acquisition_Mode	= "Acquisition Mode";
 #define NODE_NAME_ACQSTART      (int8_t*)"AcquisitionStart"
 #define NODE_NAME_ACQSTOP       (int8_t*)"AcquisitionStop"
 #define NODE_NAME_EXPMODE		(int8_t*)"ExposureMode"
+#define NODE_NAME_EXPAUTO		(int8_t*)"ExposureAuto"
 #define NODE_NAME_SHUTTERMODE	(int8_t*)"ShutterMode"
 #define NODE_NAME_TIMED			(int8_t*)"Timed"
+#define NODE_NAME_OFF			(int8_t*)"Off"
 #define NODE_NAME_EXPOSURETIMEABS (int8_t*)"ExposureTimeAbs"
 
 extern const char* g_CameraDeviceName;
@@ -256,7 +258,7 @@ protected:
 	bool useExposureTimeAbsInt;
 
 	// other members
-	GigENodes* nodes;
+	USB3VisionCameraNodes* nodes;
 	unsigned char* buffer_;
 	size_t bufferSizeBytes;
 

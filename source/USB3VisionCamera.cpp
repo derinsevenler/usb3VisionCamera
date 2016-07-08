@@ -12,7 +12,7 @@
 //
 
 #include "usb3VisionCamera.h"
-#include "usb3VisionNodes.h"
+#include "usb3VisionCameraNodes.h"
 #include <cstdio>
 #include <string>
 #include <math.h>
@@ -50,7 +50,7 @@ MODULE_API MM::Device* CreateDevice(const char* deviceName)
 	if (strcmp(deviceName, g_CameraDeviceName) == 0)
 	{
 		// create camera
-		return new USB3VisionCamera();
+		return new CUSB3VisionCamera();
 	}
 	// ...supplied name not recognized
 	return 0;
@@ -256,20 +256,20 @@ int CUSB3VisionCamera::Initialize()
 	LogMessage( "camera open succeeded", false );
 	cameraOpened = true;
 
-   // EnumerateAllNodesToLog();
-   EnumerateAllFeaturesToLog();
-
+   //EnumerateAllNodesToLog();
+   //EnumerateAllFeaturesToLog();
+	
 	struct Logger
 	{
 		CUSB3VisionCamera* d;
 		Logger( CUSB3VisionCamera* d ) : d( d ) {}
 		void operator()( const std::string& msg ) { d->LogMessage( msg, true ); }
 	} logger(this);
-	this->nodes = new USB3VisionNodes( hCamera, logger );
+	this->nodes = new USB3VisionCameraNodes( hCamera, logger );
 
 	// make sure the exposure mode is set to "Timed", if possible.
 	// not an error if we can't set this, since it's only a recommended parameter.
-	LogMessage( "Setting exposure mode to Timed" );
+	// LogMessage( "Setting exposure mode to Timed" );
 	retval = J_Camera_SetValueString( hCamera, NODE_NAME_EXPMODE,NODE_NAME_TIMED );
 	if( retval != J_ST_SUCCESS )
 	{
@@ -289,16 +289,28 @@ int CUSB3VisionCamera::Initialize()
 	{
 		LogMessage( "Successfully set ExposureMode to Timed" );
 	}
+
+
+	retval = J_Camera_SetValueString( hCamera, NODE_NAME_EXPAUTO, NODE_NAME_OFF );
+	if( retval != J_ST_SUCCESS )
+	{
+		LogMessage( "Failed to set ExposureAuto to off" );
+	}
+	else
+	{
+		LogMessage( "Successfully set ExposureAuto to off" );
+	}
 	
 	// set property list
 	// -----------------
 	std::string s;
 
+
 	// Name
 	nRet = CreateProperty(MM::g_Keyword_Name, g_CameraDeviceName, MM::String, true);
-	if( nRet != DEVICE_OK )
+	if( nRet != DEVICE_OK ){
 		return nRet;
-
+	}
 	// Vendor
 	if( nodes->get( s, DEVICE_VENDOR_NAME ) )
 	{
@@ -347,11 +359,11 @@ int CUSB3VisionCamera::Initialize()
 			return nRet;
 	}
 
-	// GigE Vision spec version
+	// USB3 Vision spec version
 	int64_t v;
 	if( nodes->get( v, U3V_VERSION_MAJOR ) )
 	{
-		nRet = CreateProperty( "GigE Vision Major Version Number", boost::lexical_cast<std::string>( v ).c_str(), MM::Integer, 
+		nRet = CreateProperty( "USB Vision Major Version Number", boost::lexical_cast<std::string>( v ).c_str(), MM::Integer, 
 								!nodes->isWritable( U3V_VERSION_MAJOR ) );
 		if( nRet != DEVICE_OK )
 			return nRet;
@@ -359,7 +371,7 @@ int CUSB3VisionCamera::Initialize()
 	
 	if( nodes->get( v, U3V_VERSION_MINOR ) )
 	{
-		nRet = CreateProperty( "GigE Vision Minor Version Number", boost::lexical_cast<std::string>( v ).c_str(), MM::Integer, 
+		nRet = CreateProperty( "USB Vision Minor Version Number", boost::lexical_cast<std::string>( v ).c_str(), MM::Integer, 
 								!nodes->isWritable( U3V_VERSION_MINOR ) );
 		if( nRet != DEVICE_OK )
 			return nRet;
@@ -447,7 +459,7 @@ int CUSB3VisionCamera::Initialize()
 	}
 
 
-	// binning.  
+	// binning. 
 	nRet = SetUpBinningProperties();
 	if (nRet != DEVICE_OK)
 		return nRet;
@@ -455,8 +467,9 @@ int CUSB3VisionCamera::Initialize()
 	// pixel type
 	// note that, in the GenICam standard, pixel format and bit depth are rolled into one
 	// we do not obmit pixel types anymore but we should for 64bit RGB, since mm cant handle them
-	LogMessage( (std::string) "Getting all PixelTypeValues" );
+	// LogMessage( (std::string) "Getting all PixelTypeValues" );
 	std::vector<std::string> pixelTypeValues;
+	uint32_t xx = nodes->getNumEnumEntries( PIXEL_FORMAT );
 	for( uint32_t i = 0; i < nodes->getNumEnumEntries( PIXEL_FORMAT ); i++ )
 	{
 		std::string entry, displayName;
@@ -474,10 +487,13 @@ int CUSB3VisionCamera::Initialize()
 	std::string px, dn;
 	nodes->get( px, PIXEL_FORMAT );
 	std::map<std::string, std::string>::iterator it = pixelFormatMap.find( px );
+
+
 	if( it == pixelFormatMap.end() )
 		dn = px;
 	else
 		dn = it->second;
+
 	LogMessage( (std::string) "Setting PixelType to " + dn );
 	nRet = CreateProperty( MM::g_Keyword_PixelType, dn.c_str(), MM::String, !nodes->isWritable( PIXEL_FORMAT ), pAct );
 	if (nRet != DEVICE_OK)
@@ -487,7 +503,6 @@ int CUSB3VisionCamera::Initialize()
 	if (nRet != DEVICE_OK)
 		return nRet;
 
-	//Acquisition mode
 	std::vector<std::string> acquistionmodeValues;
 	for( uint32_t i = 0; i <= nodes->getNumEnumEntries( ACQUISITION_MODE ) - 1; i++ )
 	{
@@ -498,6 +513,7 @@ int CUSB3VisionCamera::Initialize()
 		acqModeMap.insert( std::pair<std::string, std::string>( displayName, entry ) );
 		acquistionmodeValues.push_back( displayName );
 	}
+// ------------------------------
 
 	pAct = new CPropertyAction (this, &CUSB3VisionCamera::onAcquisitionMode);
 	std::string px1, dn1;
@@ -534,7 +550,7 @@ int CUSB3VisionCamera::Initialize()
 	else if( nodes->isAvailable( EXPOSURE_TIME_ABS ) && nodes->getMin( EXPOSURE_TIME_ABS, exposureLowUs ) && nodes->getMax( EXPOSURE_TIME_ABS, exposureHighUs ) )
 	{
 		useExposureTimeAbs = true;
-		LogMessage( "Using ExposureTimeAbs (double) for Exposure", true );
+		// LogMessage( "Using ExposureTimeAbs (double) for Exposure", true );
 		pAct = new CPropertyAction( this, &CUSB3VisionCamera::OnExposure );
 		double e;
 		nodes->get( e, EXPOSURE_TIME_ABS );
@@ -549,7 +565,7 @@ int CUSB3VisionCamera::Initialize()
 		if( nodes->getMin( EXPOSURE_TIME_ABS_INT, exposureLowUs ) && nodes->getMax( EXPOSURE_TIME_ABS_INT, exposureHighUs ) )
 		{
 			useExposureTimeAbsInt = true;
-			LogMessage( "Using ExposureTimeAbs (int) for Exposure", true );
+			// LogMessage( "Using ExposureTimeAbs (int) for Exposure", true );
 			pAct = new CPropertyAction( this, &CUSB3VisionCamera::OnExposure );
 			int64_t e;
 			nodes->get( e, EXPOSURE_TIME_ABS_INT );

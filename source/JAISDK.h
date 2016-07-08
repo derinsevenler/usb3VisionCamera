@@ -2,7 +2,7 @@
 
 #include <cstdint> // Must be included before JAI headers to prevent redefinition of integer types.
 
-#include "Jai_Factory.h"
+#include "jai_factory.h"
 
 // Trivial conversion between char* and int8_t* for working with JAI's API.
 inline int8_t* str2jai(char* s) { return reinterpret_cast<int8_t*>(s); }

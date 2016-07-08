@@ -30,10 +30,10 @@ const std::map< int, std::string > sfncNames
 							// recommended/optional nodes
 							( DEVICE_VENDOR_NAME, "DeviceVendorName" )
 							( DEVICE_MODEL_NAME, "DeviceModelName" )
-							( DEVICE_MANUFACTURER_INFO, "DeviceManufacturerInfo" )
-							( DEVICE_VERSION, "DeviceVersion" )
+							( DEVICE_MANUFACTURER_INFO, "DeviceVersion" )
+							( DEVICE_VERSION, "DeviceSVNVersion" )
 							( DEVICE_FIRMWARE_VERSION, "DeviceFirmwareVersion" )
-							( DEVICE_ID, "DeviceID" )
+							( DEVICE_ID, "DeviceUserID" )
 
 							( SENSOR_WIDTH, "SensorWidth" )
 							( SENSOR_HEIGHT, "SensorHeight" )
@@ -43,6 +43,7 @@ const std::map< int, std::string > sfncNames
 							( BINNING_VERTICAL, "BinningVertical" )
 
 							( EXPOSURE_MODE, "ExposureMode" )
+							( EXPOSURE_AUTO, "ExposureAuto" )
 							( EXPOSURE_TIME, "ExposureTime" )
 							( EXPOSURE_TIME_ABS, "ExposureTimeAbs" )
 							( EXPOSURE_TIME_ABS_INT, "ExposureTimeAbs" )
@@ -54,8 +55,8 @@ const std::map< int, std::string > sfncNames
 
 							( TEMPERATURE, "DeviceTemperature" )
 
-							( GEV_VERSION_MAJOR, "GevVersionMajor" )
-							( GEV_VERSION_MINOR, "GevVersionMinor" )
+							( U3V_VERSION_MAJOR, "DeviceGenCpVersionMajor" )
+							( U3V_VERSION_MINOR, "DeviceGenCpVersionMinor" )
 
 							( ACQUISITION_FRAME_RATE, "AcquisitionFrameRate" )
 							( ACQUISITION_FRAME_RATE_STR, "AcquisitionFrameRate" )
@@ -83,7 +84,7 @@ public:
 } // anonymous namespace
 
 
-USB3VisionNodes::USB3VisionNodes( CAM_HANDLE camera, boost::function<void(const std::string&)> logger )
+USB3VisionCameraNodes::USB3VisionCameraNodes( CAM_HANDLE camera, boost::function<void(const std::string&)> logger )
 	: camera( camera )
 {
 	// the types of all these nodes is as specified in the GenICam sfnc 1.4
@@ -112,6 +113,7 @@ USB3VisionNodes::USB3VisionNodes( CAM_HANDLE camera, boost::function<void(const 
 	intNodes.insert( std::make_pair( BINNING_VERTICAL, nf.IntNode( BINNING_VERTICAL ) ) );
 	
 	stringNodes.insert( std::make_pair( EXPOSURE_MODE, nf.StringNode( EXPOSURE_MODE ) ) );
+	stringNodes.insert( std::make_pair( EXPOSURE_AUTO, nf.StringNode( EXPOSURE_AUTO ) ) );
 	floatNodes.insert( std::make_pair( EXPOSURE_TIME, nf.FloatNode( EXPOSURE_TIME ) ) );
 	floatNodes.insert( std::make_pair( EXPOSURE_TIME_ABS, nf.FloatNode( EXPOSURE_TIME_ABS ) ) );
 	intNodes.insert( std::make_pair( EXPOSURE_TIME_ABS_INT, nf.IntNode( EXPOSURE_TIME_ABS_INT ) ) );
@@ -123,21 +125,21 @@ USB3VisionNodes::USB3VisionNodes( CAM_HANDLE camera, boost::function<void(const 
 
 	floatNodes.insert( std::make_pair( TEMPERATURE, nf.FloatNode( TEMPERATURE ) ) );
 
-	intNodes.insert( std::make_pair( GEV_VERSION_MAJOR, nf.IntNode( GEV_VERSION_MAJOR ) ) );
-	intNodes.insert( std::make_pair( GEV_VERSION_MINOR, nf.IntNode( GEV_VERSION_MINOR ) ) );
+	intNodes.insert( std::make_pair( U3V_VERSION_MAJOR, nf.IntNode( U3V_VERSION_MAJOR ) ) );
+	intNodes.insert( std::make_pair( U3V_VERSION_MINOR, nf.IntNode( U3V_VERSION_MINOR ) ) );
 
 	floatNodes.insert( std::make_pair( ACQUISITION_FRAME_RATE, nf.FloatNode( ACQUISITION_FRAME_RATE ) ) );
 }
 
 
-USB3VisionNodes::~USB3VisionNodes(void)
+USB3VisionCameraNodes::~USB3VisionCameraNodes(void)
 {
 
 
 }
 
 
-bool USB3VisionNodes::get( int64_t& i, InterestingNodeInteger node )
+bool USB3VisionCameraNodes::get( int64_t& i, InterestingNodeInteger node )
 {
 	IntNode n = intNodes[node];
 	if( n.isReadable() )
@@ -148,7 +150,7 @@ bool USB3VisionNodes::get( int64_t& i, InterestingNodeInteger node )
 }
 
 
-bool USB3VisionNodes::get( double& i, InterestingNodeFloat node )
+bool USB3VisionCameraNodes::get( double& i, InterestingNodeFloat node )
 {
 	FloatNode n = floatNodes[node];
 	if( n.isReadable() )
@@ -159,7 +161,7 @@ bool USB3VisionNodes::get( double& i, InterestingNodeFloat node )
 }
 
 
-bool USB3VisionNodes::get( std::string& i, InterestingNodeString node )
+bool USB3VisionCameraNodes::get( std::string& i, InterestingNodeString node )
 {
 	StringNode n = stringNodes[node];
 	if( n.isReadable() )
@@ -170,7 +172,7 @@ bool USB3VisionNodes::get( std::string& i, InterestingNodeString node )
 }
 
 
-bool USB3VisionNodes::set( const int64_t i, InterestingNodeInteger node )
+bool USB3VisionCameraNodes::set( const int64_t i, InterestingNodeInteger node )
 {
 	IntNode n = intNodes[node];
 	if( n.isWritable() )
@@ -181,7 +183,7 @@ bool USB3VisionNodes::set( const int64_t i, InterestingNodeInteger node )
 }
 
 
-bool USB3VisionNodes::set( const double i, InterestingNodeFloat node )
+bool USB3VisionCameraNodes::set( const double i, InterestingNodeFloat node )
 {
 	FloatNode n = floatNodes[node];
 	if( n.isWritable() )
@@ -192,7 +194,7 @@ bool USB3VisionNodes::set( const double i, InterestingNodeFloat node )
 }
 
 
-bool USB3VisionNodes::set( const std::string i, InterestingNodeString node )
+bool USB3VisionCameraNodes::set( const std::string i, InterestingNodeString node )
 {
 	StringNode n = stringNodes[node];
 	if( n.isWritable() )
@@ -203,7 +205,7 @@ bool USB3VisionNodes::set( const std::string i, InterestingNodeString node )
 }
 
 
-bool USB3VisionNodes::getMin( InterestingNodeInteger node, int64_t& value )
+bool USB3VisionCameraNodes::getMin( InterestingNodeInteger node, int64_t& value )
 {
 	if( !intNodes[node].hasMinimum() )
 		return false;
@@ -211,7 +213,7 @@ bool USB3VisionNodes::getMin( InterestingNodeInteger node, int64_t& value )
 }
 
 
-bool USB3VisionNodes::getMax( InterestingNodeInteger node, int64_t& value )
+bool USB3VisionCameraNodes::getMax( InterestingNodeInteger node, int64_t& value )
 {
 	if( !intNodes[node].hasMaximum() )
 		return false;
@@ -219,7 +221,7 @@ bool USB3VisionNodes::getMax( InterestingNodeInteger node, int64_t& value )
 }
 
 
-bool USB3VisionNodes::getIncrement( InterestingNodeInteger node, int64_t& value )
+bool USB3VisionCameraNodes::getIncrement( InterestingNodeInteger node, int64_t& value )
 {
 	if( !intNodes[node].hasIncrement() )
 		return false;
@@ -227,7 +229,7 @@ bool USB3VisionNodes::getIncrement( InterestingNodeInteger node, int64_t& value 
 }
 
 
-bool USB3VisionNodes::getMin( InterestingNodeFloat node, double& value )
+bool USB3VisionCameraNodes::getMin( InterestingNodeFloat node, double& value )
 {
 	if( !floatNodes[node].hasMinimum() )
 		return false;
@@ -235,7 +237,7 @@ bool USB3VisionNodes::getMin( InterestingNodeFloat node, double& value )
 }
 
 
-bool USB3VisionNodes::getMax( InterestingNodeFloat node, double& value )
+bool USB3VisionCameraNodes::getMax( InterestingNodeFloat node, double& value )
 {
 	if( !floatNodes[node].hasMaximum() )
 		return false;
@@ -243,13 +245,13 @@ bool USB3VisionNodes::getMax( InterestingNodeFloat node, double& value )
 }
 
 
-bool USB3VisionNodes::hasIncrement( InterestingNodeFloat node )
+bool USB3VisionCameraNodes::hasIncrement( InterestingNodeFloat node )
 {
 	return floatNodes[node].hasIncrement( );
 }
 
 
-bool USB3VisionNodes::getIncrement( InterestingNodeFloat node, double& value )
+bool USB3VisionCameraNodes::getIncrement( InterestingNodeFloat node, double& value )
 {
 	if( !floatNodes[node].hasIncrement() )
 		return false;
@@ -257,19 +259,19 @@ bool USB3VisionNodes::getIncrement( InterestingNodeFloat node, double& value )
 }
 
 
-bool USB3VisionNodes::isEnum( InterestingNodeInteger node )
+bool USB3VisionCameraNodes::isEnum( InterestingNodeInteger node )
 {
 	return intNodes[node].isEnumeration( );
 }
 
 
-bool USB3VisionNodes::isEnum( InterestingNodeString node )
+bool USB3VisionCameraNodes::isEnum( InterestingNodeString node )
 {
 	return stringNodes[node].isEnumeration();
 }
 
 
-uint32_t USB3VisionNodes::getNumEnumEntries( InterestingNodeInteger node )
+uint32_t USB3VisionCameraNodes::getNumEnumEntries( InterestingNodeInteger node )
 {
 	uint32_t i;
 	J_STATUS_TYPE retval = intNodes[node].getNumEnumEntries( camera, i );
@@ -279,17 +281,17 @@ uint32_t USB3VisionNodes::getNumEnumEntries( InterestingNodeInteger node )
 }
 
 
-uint32_t USB3VisionNodes::getNumEnumEntries( InterestingNodeString node )
+uint32_t USB3VisionCameraNodes::getNumEnumEntries( InterestingNodeString node )
 {
 	uint32_t i;
 	J_STATUS_TYPE retval = stringNodes[node].getNumEnumEntries( camera, i );
 	if( retval != J_ST_SUCCESS )
-		return 0;
+		return i;
 	return i;
 }
 
 
-bool USB3VisionNodes::getEnumEntry( std::string& entry, uint32_t index, InterestingNodeInteger node )
+bool USB3VisionCameraNodes::getEnumEntry( std::string& entry, uint32_t index, InterestingNodeInteger node )
 {
 	J_STATUS_TYPE retval = intNodes[node].getEnumEntry( camera, index, entry );
 	if( retval == J_ST_SUCCESS )
@@ -299,7 +301,7 @@ bool USB3VisionNodes::getEnumEntry( std::string& entry, uint32_t index, Interest
 }
 
 
-bool USB3VisionNodes::getEnumEntry( std::string& entry, uint32_t index, InterestingNodeString node )
+bool USB3VisionCameraNodes::getEnumEntry( std::string& entry, uint32_t index, InterestingNodeString node )
 {
 	J_STATUS_TYPE retval = stringNodes[node].getEnumEntry( camera, index, entry );
 	if( retval == J_ST_SUCCESS )
@@ -309,7 +311,7 @@ bool USB3VisionNodes::getEnumEntry( std::string& entry, uint32_t index, Interest
 }
 
 
-bool USB3VisionNodes::getEnumDisplayName( std::string& name, uint32_t index, InterestingNodeInteger node )
+bool USB3VisionCameraNodes::getEnumDisplayName( std::string& name, uint32_t index, InterestingNodeInteger node )
 {
 	J_STATUS_TYPE retval = intNodes[node].getEnumDisplayName( camera, index, name );
 	if( retval == J_ST_SUCCESS )
@@ -319,7 +321,7 @@ bool USB3VisionNodes::getEnumDisplayName( std::string& name, uint32_t index, Int
 }
 
 
-bool USB3VisionNodes::getEnumDisplayName( std::string& name, uint32_t index, InterestingNodeString node )
+bool USB3VisionCameraNodes::getEnumDisplayName( std::string& name, uint32_t index, InterestingNodeString node )
 {
 	J_STATUS_TYPE retval = stringNodes[node].getEnumDisplayName( camera, index, name );
 	if( retval == J_ST_SUCCESS )
@@ -395,7 +397,7 @@ template<class T> Node<T>& Node<T>::operator=( const Node<T>& rhs )
 
 template<class T> void Node<T>::testAvailability( CAM_HANDLE camera )
 {
-	LogMessage( "Getting node: " + sfncName );
+	// LogMessage( "Getting node: " + sfncName );
 	NODE_HANDLE node;
 	J_STATUS_TYPE retval  = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS )
@@ -407,7 +409,7 @@ template<class T> void Node<T>::testAvailability( CAM_HANDLE camera )
 		return;
 	}
 
-	LogMessage( "Getting node access mode: " + sfncName );
+	// LogMessage( "Getting node access mode: " + sfncName );
 	J_NODE_ACCESSMODE access;
 	retval = J_Node_GetAccessMode( node, &access );
 	if( retval != J_ST_SUCCESS )
@@ -418,7 +420,7 @@ template<class T> void Node<T>::testAvailability( CAM_HANDLE camera )
 		this->writable = false;
 		return;
 	}
-	LogMessage( "Node " + sfncName + " access mode = " + boost::lexical_cast<std::string>( access ) );
+	// LogMessage( "Node " + sfncName + " access mode = " + boost::lexical_cast<std::string>( access ) );
 	switch( access )
 	{
 	case NI:  // not implemented
@@ -450,7 +452,7 @@ template<class T> void Node<T>::testAvailability( CAM_HANDLE camera )
 
 template<> void Node<int64_t>::testType( NODE_HANDLE node )
 {
-	LogMessage( "Getting node type: " + sfncName );
+	// LogMessage( "Getting node type: " + sfncName );
 	J_NODE_TYPE type;
 	J_STATUS_TYPE retval = J_Node_GetType( node, &type );
 	if( retval != J_ST_SUCCESS )
@@ -474,7 +476,7 @@ template<> void Node<int64_t>::testType( NODE_HANDLE node )
 
 template<> void Node<double>::testType( NODE_HANDLE node )
 {
-	LogMessage( "Getting node type: " + sfncName );
+	// LogMessage( "Getting node type: " + sfncName );
 	J_NODE_TYPE type;
 	J_STATUS_TYPE retval = J_Node_GetType( node, &type );
 	if( retval != J_ST_SUCCESS )
@@ -498,7 +500,7 @@ template<> void Node<double>::testType( NODE_HANDLE node )
 
 template<> void Node<std::string>::testType( NODE_HANDLE node )
 {
-	LogMessage( "Getting node type: " + sfncName );
+	// LogMessage( "Getting node type: " + sfncName );
 	J_NODE_TYPE type;
 	J_STATUS_TYPE retval = J_Node_GetType( node, &type );
 	if( retval != J_ST_SUCCESS )
@@ -522,7 +524,7 @@ template<> void Node<std::string>::testType( NODE_HANDLE node )
 
 template<class T> void Node<T>::testEnum( CAM_HANDLE camera )
 {
-	LogMessage( "Getting node: " + sfncName );
+	// LogMessage( "Getting node: " + sfncName );
 	NODE_HANDLE node;
 	J_STATUS_TYPE retval  = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS )
@@ -532,7 +534,7 @@ template<class T> void Node<T>::testEnum( CAM_HANDLE camera )
 		return;
 	}
 
-	LogMessage( "Getting node type: " + sfncName );
+	// LogMessage( "Getting node type: " + sfncName );
 	J_NODE_TYPE type;
 	retval = J_Node_GetType( node, &type );
 	if( retval != J_ST_SUCCESS )
@@ -561,15 +563,15 @@ template<> void Node<double>::testMinMaxInc( CAM_HANDLE camera )
 {
 	this->hasMin = true;
 	this->hasMax = true;
-	LogMessage( "Getting node: " + sfncName );
+	// LogMessage( "Getting node: " + sfncName );
 	NODE_HANDLE node;
 	J_STATUS_TYPE retval  = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS ) {
-		LogMessage( "Failed to get node: " + sfncName );
+		 LogMessage( "Failed to get node: " + sfncName );
 		this->hasInc = false;
 		return;
 	}
-	LogMessage( "Getting float node increment flag: " + sfncName );
+	// LogMessage( "Getting float node increment flag: " + sfncName );
 	uint32_t i;
 	retval = J_Node_GetFloatHasInc( node, &i );
 	if( retval != J_ST_SUCCESS || i == 0 ) {
@@ -596,7 +598,7 @@ template<> bool Node<int64_t>::getMinimum( CAM_HANDLE camera, int64_t& value )
 	J_STATUS_TYPE retval  = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS )
 		return false;
-	LogMessage( "Getting min int64 for " + sfncName );
+	// LogMessage( "Getting min int64 for " + sfncName );
 	retval = J_Node_GetMinInt64( node, &value );
 	return retval == J_ST_SUCCESS;
 }
@@ -609,7 +611,7 @@ template<> bool Node<int64_t>::getMaximum( CAM_HANDLE camera, int64_t& value )
 	J_STATUS_TYPE retval  = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS )
 		return false;
-	LogMessage( "Getting max int64 for " + sfncName );
+	// LogMessage( "Getting max int64 for " + sfncName );
 	retval = J_Node_GetMaxInt64( node, &value );
 	return retval == J_ST_SUCCESS;
 }
@@ -622,7 +624,7 @@ template<> bool Node<int64_t>::getIncrement( CAM_HANDLE camera, int64_t& value )
 	J_STATUS_TYPE retval  = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS )
 		return false;
-	LogMessage( "Getting increment for " + sfncName );
+	// LogMessage( "Getting increment for " + sfncName );
 	retval = J_Node_GetInc( node, &value );
 	return retval == J_ST_SUCCESS;
 }
@@ -635,7 +637,7 @@ template<> bool Node<double>::getMinimum( CAM_HANDLE camera, double& value )
 	J_STATUS_TYPE retval  = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS )
 		return false;
-	LogMessage( "Getting min double for " + sfncName );
+	// LogMessage( "Getting min double for " + sfncName );
 	retval = J_Node_GetMinDouble( node, &value );
 	return retval == J_ST_SUCCESS;
 }
@@ -648,7 +650,7 @@ template<> bool Node<double>::getMaximum( CAM_HANDLE camera, double& value )
 	J_STATUS_TYPE retval  = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS )
 		return false;
-	LogMessage( "Getting max double for " + sfncName );
+	// LogMessage( "Getting max double for " + sfncName );
 	retval = J_Node_GetMaxDouble( node, &value );
 	return retval == J_ST_SUCCESS;
 }
@@ -661,7 +663,7 @@ template<> bool Node<double>::getIncrement( CAM_HANDLE camera, double& value )
 	J_STATUS_TYPE retval  = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS )
 		return false;
-	LogMessage( "Getting float increment for " + sfncName );
+	// LogMessage( "Getting float increment for " + sfncName );
 	retval = J_Node_GetFloatInc( node, &value );
 	return retval == J_ST_SUCCESS;
 }
@@ -695,7 +697,7 @@ template<> J_STATUS_TYPE Node<int64_t>::get( CAM_HANDLE camera, int64_t& a )
 	if( retval != J_ST_SUCCESS )
 		return retval;
 	int64_t i;
-	LogMessage( "Getting int64 value for " + sfncName );
+	// LogMessage( "Getting int64 value for " + sfncName );
 	retval = J_Node_GetValueInt64( node, false, &i );
 	if( retval == J_ST_SUCCESS )
 		a = i;
@@ -710,7 +712,7 @@ template<> J_STATUS_TYPE Node<double>::get( CAM_HANDLE camera, double& a )
 	if( retval != J_ST_SUCCESS )
 		return retval;
 	double i;
-	LogMessage( "Getting double value for " + sfncName );
+	// LogMessage( "Getting double value for " + sfncName );
 	retval = J_Node_GetValueDouble( node, false, &i );
 	if( retval == J_ST_SUCCESS )
 		a = i;
@@ -726,7 +728,7 @@ template<> J_STATUS_TYPE Node<std::string>::get( CAM_HANDLE camera, std::string&
 		return retval;
 	uint32_t size = 512;
 	char s[512];
-	LogMessage( "Getting string value for " + sfncName );
+	// LogMessage( "Getting string value for " + sfncName );
 	retval = J_Node_GetValueString( node, false, str2jai( s ), &size );
 	if( retval == J_ST_SUCCESS )
 		a = s;
@@ -740,7 +742,7 @@ template<> J_STATUS_TYPE Node<int64_t>::set( CAM_HANDLE camera, const int64_t& a
 	J_STATUS_TYPE retval  = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS )
 		return retval;
-	LogMessage( "Setting int64 value for " + sfncName );
+	 //LogMessage( "Setting int64 value for " + sfncName );
 	retval = J_Node_SetValueInt64( node, true, a );
 	return retval;
 }
@@ -752,7 +754,7 @@ template<> J_STATUS_TYPE Node<double>::set( CAM_HANDLE camera, const double& a )
 	J_STATUS_TYPE retval  = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS )
 		return retval;
-	LogMessage( "Setting double value for " + sfncName );
+	// LogMessage( "Setting double value for " + sfncName );
 	retval = J_Node_SetValueDouble( node, true, a );
 	return retval;
 }
@@ -764,7 +766,7 @@ template<> J_STATUS_TYPE Node<std::string>::set( CAM_HANDLE camera, const std::s
 	J_STATUS_TYPE retval = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS )
 		return retval;
-	LogMessage( "Setting string value for " + sfncName );
+	// LogMessage( "Setting string value for " + sfncName );
 	retval = J_Node_SetValueString( node, true, cstr2jai( a.c_str() ) );
 	return retval;
 }
@@ -773,10 +775,12 @@ template<> J_STATUS_TYPE Node<std::string>::set( CAM_HANDLE camera, const std::s
 template<class T> J_STATUS_TYPE Node<T>::getNumEnumEntries( CAM_HANDLE camera, uint32_t& i )
 {
 	NODE_HANDLE node;
-	LogMessage( "Getting enum entries for " + sfncName );
+	// LogMessage( "Getting enum entries for " + sfncName );
 	J_STATUS_TYPE retval = J_Camera_GetNodeByName( camera, cstr2jai( this->sfncName.c_str() ), &node );
 	if( retval != J_ST_SUCCESS )
 		return retval;
+	// GetNodeByName works ok - GetNumOfEnumEntries does not. PROBLEM
+
 	retval = J_Node_GetNumOfEnumEntries( node, &i );
 	return retval;
 }
@@ -789,13 +793,13 @@ template<class T> J_STATUS_TYPE Node<T>::getEnumEntry( CAM_HANDLE camera, uint32
 	if( retval != J_ST_SUCCESS )
 		return retval;
 	NODE_HANDLE enumEntry;
-	LogMessage( "Getting enum entry " + boost::lexical_cast<std::string>( index ) + " for " + sfncName );
+	// LogMessage( "Getting enum entry " + boost::lexical_cast<std::string>( index ) + " for " + sfncName );
 	retval = J_Node_GetEnumEntryByIndex( node, index, &enumEntry );
 	if( retval != J_ST_SUCCESS )
 		return retval;
 	uint32_t len = 512;
 	char a[512];
-	LogMessage( "Getting enum entry name" );
+	// LogMessage( "Getting enum entry name" );
 	retval = J_Node_GetName( enumEntry, str2jai( a ), &len );
 	if( retval != J_ST_SUCCESS )
 		return retval;
@@ -826,13 +830,13 @@ template<class T> J_STATUS_TYPE Node<T>::getEnumDisplayName( CAM_HANDLE camera, 
 	if( retval != J_ST_SUCCESS )
 		return retval;
 	NODE_HANDLE enumEntry;
-	LogMessage( "Getting enum entry " + boost::lexical_cast<std::string>( index ) + " for " + sfncName );
+	// LogMessage( "Getting enum entry " + boost::lexical_cast<std::string>( index ) + " for " + sfncName );
 	retval = J_Node_GetEnumEntryByIndex( node, index, &enumEntry );
 	if( retval != J_ST_SUCCESS )
 		return retval;
 	uint32_t len = 512;
 	char a[512];
-	LogMessage( "Getting enum entry display name" );
+	// LogMessage( "Getting enum entry display name" );
 	retval = J_Node_GetDisplayName( enumEntry, str2jai( a ), &len );
 	if( retval != J_ST_SUCCESS )
 		return retval;

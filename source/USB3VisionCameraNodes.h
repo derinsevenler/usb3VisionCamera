@@ -35,8 +35,8 @@ enum InterestingNodeInteger
 	HEIGHT_MAX,
 	BINNING_HORIZONTAL,
 	BINNING_VERTICAL,
-	GEV_VERSION_MAJOR,
-	GEV_VERSION_MINOR,
+	U3V_VERSION_MAJOR,
+	U3V_VERSION_MINOR,
 
 	EXPOSURE_TIME_ABS_INT, // deprecated, but JAI seems to use only this, not EXPOSURE_TIME
 	// also, the GenICam docs say this should be a float, but our camera has it as an int
@@ -79,6 +79,7 @@ enum InterestingNodeString
 	DEVICE_ID,
 
 	EXPOSURE_MODE,
+	EXPOSURE_AUTO,
 	PIXEL_COLOR_FILTER,		// IEnumeration
 
 	ACQUISITION_FRAME_RATE_STR, // this is supposed to be a float, but our camera has it as a string enum
@@ -143,7 +144,7 @@ protected:
 
 
 
-class USB3VisionNodes
+class USB3VisionCameraNodes
 {
 protected:
 	typedef Node<int64_t> IntNode;
@@ -161,8 +162,8 @@ protected:
 	CAM_HANDLE camera;
 
 public:
-	USB3VisionNodes( CAM_HANDLE camera, boost::function<void(const std::string&)> logger = 0 );
-	virtual ~USB3VisionNodes(void);
+	USB3VisionCameraNodes( CAM_HANDLE camera, boost::function<void(const std::string&)> logger = 0 );
+	virtual ~USB3VisionCameraNodes(void);
 
 	bool isAvailable( InterestingNodeInteger node )
 	{  return intNodes[node].isAvailable();  }
